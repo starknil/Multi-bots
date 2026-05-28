@@ -1,0 +1,27 @@
+{
+  "name": "multi-self-bots",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "2captcha": "^3.0.5-2",
+    "2captcha-ts": "^2.4.1",
+    "agent-twitter-client": "^0.0.18",
+    "axios": "^1.16.1",
+    "cheerio": "^1.2.0",
+    "debug": "^4.4.3",
+    "discord.js-selfbot-v13": "^3.7.1",
+    "dotenv": "^17.4.2",
+    "input": "^1.0.1",
+    "playwright": "^1.60.0",
+    "rss-parser": "^3.13.0",
+    "telegram": "^2.26.22"
+  }
+}
