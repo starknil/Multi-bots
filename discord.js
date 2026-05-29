@@ -124,8 +124,8 @@ cll.on("channelCreate", async (channel) => {
 
 cll.on("threadCreate", async (thread) => {
 
-  console.log("📁 THREAD CREATED", thread);
-  /*
+  //console.log("📁 THREAD CREATED", thread);
+
   if (!thread.guild) return;
   await sendTicketMessage({
     type: "Thread Ticket",
@@ -133,8 +133,7 @@ cll.on("threadCreate", async (thread) => {
     creator: thread.name,
     topicId: 11,
   });
-  */
-
+  
 });
 
 cll.on("error", (error) => {
