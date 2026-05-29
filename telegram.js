@@ -59,7 +59,7 @@ const startTelegeramBot = async () => {
 <b>🚨 New Detected Filter
 
 🔗 Direct Link:</b> <i>https://t.me/c/${message.peerId.channelId}/${message.id}</i>
-`, message.id);
+`, 48);
         return;
       }
     }
