@@ -8,9 +8,10 @@ const send = async (content, topicId) => {
       },
       body: JSON.stringify({
         chat_id: process.env.GROUP_ID,
-        message_thread_id: topicId || undefined,
+        //message_thread_id: topicId || undefined,
         text: content,
-        parse_mode: "HTML"
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
       })
     });
   const data = await response.json();

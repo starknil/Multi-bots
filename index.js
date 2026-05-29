@@ -3,5 +3,5 @@ const { startTelegeramBot } = require("./telegram");
 const { startDiscordBot } = require("./discord");
 
 
-startTelegeramBot();
 startDiscordBot();
+startTelegeramBot();

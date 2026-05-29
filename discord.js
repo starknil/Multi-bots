@@ -1,33 +1,48 @@
 require("dotenv").config();
 const { Client } = require("discord.js-selfbot-v13");
 const filters = require("./config");
-//const { send } = require("./send");
+const { send } = require("./send");
 
-const kingstar = new Client({
+const cll = new Client({
   checkUpdate: false,
 });
 
 const sendTicketMessage = async (data) => {
   console.log(data);
-  const { type, guild, creator, creatorId, msg } = data;
-  const content = `
-🎫 <b>${type}</b> created in <b>${guild}</b> server!
+  const { type, guild, creator, creatorId, msg, directLink } = data;
+const lines = [
+  `🎫 <b>${type}</b> created in <b>${guild}</b> server!`,
+  ``,
+  `<b>🪪 Ticket ID:</b> ${data.name}`,
+  `<b>👤 Creator:</b> @${creator}`,
+];
 
-<b>👤 Creator:</b> @${creator}
-${creatorId ? `<b>🆔 ID:</b> <code>${creatorId}</code>` : ""}
-${msg ? `<b>💬 Message:</b> <i>${msg}</i>` : ""}
-<b>📅 Created at:</b> ${new Date().toLocaleString()}
-`;
-  //await send(content, data.topicId);
+if (creatorId) {
+  lines.push(`<b>🆔 Creator ID:</b> <code>${creatorId}</code>`);
+}
+
+if (msg) {
+  lines.push(`<b>💬 Message:</b> <i>${msg}</i>`);
+}
+
+lines.push(`<b>📅 Created at:</b> ${new Date().toLocaleString()}
+`);
+
+if (directLink) {
+  lines.push(`<b>🔗 Direct Link:</b> <i>${directLink}</i>`);
+}
+
+
+const content = lines.join("\n");
+  await send(content, data.topicId);
 };
 
-/*
-kingstar.on("guildMemberAdd", async (member) => {
+cll.on("guildMemberAdd", async (member) => {
   const { guild, user } = member;
 
   let content;
 
-  if (kingstar.user.id === user.id) {
+  if (cll.user.id === user.id) {
     content = `✅ You just joined ${
       guild ? guild.name : "Unknown Server"
     } server!`;
@@ -40,53 +55,10 @@ kingstar.on("guildMemberAdd", async (member) => {
 <b>📅 Joined at:</b> ${new Date().toLocaleString()}
 `;
   }
-  await send(content, 2);
-});
-*/
-
-
-kingstar.on("channelCreate", async (channel) => {
-  if (!channel.guild) return;
-
-  const text = `${channel.name} ${channel.topic || ""}`.toLowerCase();
-
-  const isTicket =
-    text.includes("ticket") ||
-    text.includes("support") ||
-    text.includes("help") ||
-    text.includes("created by") ||
-    /ticket\s?#\d+/i.test(text);
-
-  if (!isTicket) return;
-
-  const match = channel.topic?.match(/<@(\d+)>/);
-
-  const creatorId = match?.[1] || null;
-
-  const [id, ...rest] = channel.name.split("-");
-  const creator = rest.join("-") || "Unknown User";
-
-  await sendTicketMessage({
-    type: "Channel Ticket",
-    guild: channel.guild.name,
-    creator,
-    creatorId,
-    topicId: 3
-  });
+  await send(content, 3);
 });
 
-kingstar.on("threadCreate", async (thread) => {
-  if (!thread.guild) return;
-  console.log("🧵 THREAD TICKET", thread);
-  await sendTicketMessage({
-    type: "Thread Ticket",
-    guild: thread.guild.name,
-    creator: thread.name,
-    topicId: 3
-  });
-});
-
-kingstar.on("messageCreate", async (message) => {
+cll.on("messageCreate", async (message) => {
   if (!message.guild || message.author.bot) return;
 
   if (
@@ -104,26 +76,82 @@ kingstar.on("messageCreate", async (message) => {
       creator: message.author.username,
       creatorId: message.author.id,
       msg: message.content,
-      topicId: 4
+      topicId: 9,
     },
     true,
   );
 });
 
-kingstar.on("error", (error) => {
+cll.on("channelCreate", async (channel) => {
+  //console.log("📁 CHANNEL CREATED", channel);
+
+  if (!channel.guild) return;
+
+  const overwrites = channel.permissionOverwrites.cache;
+  const memberOverwrites = channel.permissionOverwrites.cache.filter(
+    (o) => o.type === "member",
+  );
+
+  let ticketOwner = null;
+
+  for (const overwrite of memberOverwrites.values()) {
+    const member = await channel.guild.members
+      .fetch(overwrite.id)
+      .catch(() => null);
+
+    if (!member) continue;
+
+    const isStaff =
+      member.permissions.has("MANAGE_CHANNELS") || member.user.bot;
+
+    if (!isStaff) {
+      ticketOwner = member.user;
+      break;
+    }
+  }
+
+  await sendTicketMessage({
+    type: "Channel Ticket",
+    guild: channel.guild.name,
+    name: channel.name,
+    creator: ticketOwner ? ticketOwner.username : "Unknown_username",
+    creatorId: ticketOwner ? ticketOwner.id : null,
+    directLink: `https://discord.com/channels/${channel.guild.id}/${channel.id}`,
+    topicId: 11,
+  });
+});
+
+
+cll.on("threadCreate", async (thread) => {
+
+  console.log("📁 THREAD CREATED", thread);
+  /*
+  if (!thread.guild) return;
+  await sendTicketMessage({
+    type: "Thread Ticket",
+    guild: thread.guild.name,
+    creator: thread.name,
+    topicId: 11,
+  });
+  */
+
+});
+
+cll.on("error", (error) => {
   console.error("An error occurred:", error);
 });
 
 const startDiscordBot = async () => {
-  if (!filters) return console.log("⚠️ Filter list is empty for discord listening");
-  kingstar
-  .login(process.env.TOKEN)
-  .then(() => {
-    console.log("✅ Discord logged in successfully! ("+kingstar.user.tag+")");
-  })
-  .catch((err) => {
-    console.error("📛 Failed to login discord:", err);
-  });
+  if (!filters)
+    return console.log("⚠️ Filter list is empty for discord listening");
+  cll
+    .login(process.env.TOKEN)
+    .then(async () => {
+      console.log("✅ Discord logged in successfully! (" + cll.user.tag + ")");
+    })
+    .catch((err) => {
+      console.error("📛 Failed to login discord:", err);
+    });
 };
 
 module.exports = { startDiscordBot };

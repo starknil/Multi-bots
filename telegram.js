@@ -6,6 +6,7 @@ const input = require("input");
 const fs = require("fs");
 
 const filters = require("./config");
+const { send } = require("./send");
 
 const apiId = Number(process.env.API_ID);
 const apiHash = process.env.API_HASH;
@@ -54,6 +55,11 @@ const startTelegeramBot = async () => {
 
 🔗 Direct Link: https://t.me/c/${message.peerId.channelId}/${message.id}
 `);
+        await send(`
+<b>🚨 New Detected Filter
+
+🔗 Direct Link:</b> <i>https://t.me/c/${message.peerId.channelId}/${message.id}</i>
+`, message.id);
         return;
       }
     }

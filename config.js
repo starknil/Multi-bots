@@ -1,8 +1,5 @@
 const filters = [
-  "Hi",
-  "dm",
-  "hello",
-  "Can’t claim",
+,  "Can’t claim",
   "staking",
   "can’t stake",
   "can’t unstake",

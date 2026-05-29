@@ -1,6 +1,5 @@
 const fetch = require("node-fetch");
 
-
 const subreddits = [
   "CryptoCurrency",
   "CryptoScams",
@@ -36,11 +35,8 @@ async function fetchMatches() {
   const keywordFilter = queries.map(q => `"${q}"`).join(" OR ");
   const query = `(${keywordFilter}) (${subredditFilter})`;
 
-  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=day`;
+  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=hour`;
 
-  console.log("🔍 Fetching Reddit posts...");
-
-  console.log(url);
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "crypto-monitor/1.0" }
