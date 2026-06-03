@@ -161,21 +161,18 @@ class TelegramBot {
 
           if (!sender) return;
 
-          if (sender.bot) {
-            console.log("Message from bot, ignoring.");
-            return;
-          }
+          if (sender.bot) return;
 
           sender = await this.client.getEntity(sender);
 
 
           if (
-        !message.content ||
+        !message.message ||
         !filters.some((filter) =>
-          message.content.toLowerCase().includes(filter.toLowerCase()),
+          message.message.toLowerCase().includes(filter.toLowerCase()),
         )
       )
-        return console.log("Message does not contain filter keywords, ignoring.");
+        return //console.log("Message does not contain filter keywords, ignoring.");
 
           console.log({
             username: sender.username,
