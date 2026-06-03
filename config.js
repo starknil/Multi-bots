@@ -1,4 +1,5 @@
 const filters = [
+    "claim"
 ,  "Can’t claim",
   "staking",
   "can’t stake",

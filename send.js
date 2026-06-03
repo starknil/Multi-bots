@@ -21,7 +21,7 @@ const send = async (text, chat_id, topicId, details) => {
     });
   const data = await response.json();
   if (!response.ok){
-    console.error("Error sending message:", data.description || error.message);
+    console.error(`[${details.name}] [${details.id}] 📛 Error sending message:`, data.description || error.message);
     return;
   }
   console.log(`[${details.name}] [${details.id}] ✅ Update Sent Successfully!`);

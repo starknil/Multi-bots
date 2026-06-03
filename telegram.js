@@ -12,6 +12,7 @@ const DiscordBot = require("./discord");
 const filters = require("./config");
 const { send } = require("./send");
 const { createApp, getApp, getApps, updateApp, deleteApp } = require("./db/db");
+const { LimitedCollection } = require("discord.js-selfbot-v13");
 
 const generateId = (length = 8) => {
   const chars =
@@ -134,6 +135,10 @@ class TelegramBot {
 
     console.log(`[Telegram] [${this.id}] ✅ Logged in successfully!`);
 
+    await this.client.getDialogs({
+      limit: 200,
+    });
+
     if (this.type === "manual") {
       await bot.telegram.sendMessage(
         this.receiver._to,
@@ -144,37 +149,77 @@ class TelegramBot {
     const savedSession = this.client.session.save();
     await updateApp("telegram", this.id, savedSession);
 
-    this.client.addEventHandler(async (event) => {
-      const message = event.message;
-      if (
-        message &&
-        message.out === false &&
-        message.message &&
-        message.peerId &&
-        message.peerId.className !== "PeerUser"
-      ) {
-        const messageText = message.message.toLowerCase();
-        const containsFilter = true; //filters.some((filter) => messageText.includes(filter.toLowerCase()));
-        if (containsFilter) {
-          console.log(`
-🚨 New Detected Filter
+    this.client.addEventHandler(
+      async (event) => {
+        try {
+          const message = event.message;
 
-🔗 Direct Link: https://t.me/c/${message.peerId.channelId}/${message.id}
-`);
+          if (!message) return;
+
+          const chat = await message.getChat();
+          let sender = await message.getSender();
+
+          if (!sender) return;
+
+          if (sender.bot) {
+            console.log("Message from bot, ignoring.");
+            return;
+          }
+
+          sender = await this.client.getEntity(sender);
+
+
+          if (
+        !message.content ||
+        !filters.some((filter) =>
+          message.content.toLowerCase().includes(filter.toLowerCase()),
+        )
+      )
+        return console.log("Message does not contain filter keywords, ignoring.");
+
+          console.log({
+            username: sender.username,
+            firstName: sender.firstName,
+            lastName: sender.lastName,
+            chatTitle: chat?.title,
+            chatUsername: chat?.username,
+            messageText: message.message,
+            messageId: message.id,
+            messageLink: message.peerId?.channelId
+              ? `https://t.me/c/${message.peerId.channelId}/${message.id}`
+              : null,
+          });
+
+
           await send(
-            `
-<b>🚨 New Detected Filter
-
-🔗 Direct Link:</b> <i>https://t.me/c/${message.peerId.channelId}/${message.id}</i>
-`,
+            `📨 <b>New Filter Received</b>\n\n` +
+              `<b>From:</b> ${sender.firstName || ""} ${
+                sender.lastName || ""
+              } (@${sender.username || "N/A"})\n` +
+              `<b>Chat:</b> ${chat?.title || "N/A"} (@${
+                chat?.username || "N/A"
+              })\n` +
+              `<b>Message:</b>\n${message.message}\n\n` +
+              (message.peerId?.channelId
+                ? `<a href="https://t.me/c/${message.peerId.channelId}/${message.id}">View on Telegram</a>`
+                : ""),
             this.receiver._to,
             this.receiver.update,
-            { name: "Telegram", id: this.id },
+            {
+              name: "Telegram",
+              id: this.id,
+            },
           );
-          return;
+
+          
+        } catch (error) {
+          console.error(`[Telegram] [${this.id}] 📛 Error processing message:`, error.message);
         }
-      }
-    }, new NewMessage({}));
+      },
+      new NewMessage({
+        incoming: true,
+      }),
+    );
   }
 }
 
@@ -253,26 +298,24 @@ bot.action(/\/show_apps_(discord|telegram)/, async (ctx) => {
       },
     },
   );
-
 });
 
+bot.action(
+  /app_(delete|see)_(telegram|discord)_([a-zA-Z0-9]+)/,
+  async (ctx) => {
+    const action = ctx.match[1];
+    const platform = ctx.match[2];
+    const id = ctx.match[3];
 
-bot.action(/app_(delete|see)_(telegram|discord)_([a-zA-Z0-9]+)/, async (ctx) => {
-  const action = ctx.match[1];
-  const platform = ctx.match[2];
-  const id = ctx.match[3];
-
-  if (action === "delete"){
-    await deleteApp(platform, id);
-    await ctx.answerCbQuery();
-    await ctx.deleteMessage();
-  }else {
-    await ctx.answerCbQuery();
-  };
-
-});
-
-
+    if (action === "delete") {
+      await deleteApp(platform, id);
+      await ctx.answerCbQuery();
+      await ctx.deleteMessage();
+    } else {
+      await ctx.answerCbQuery();
+    }
+  },
+);
 
 bot.action("/new_app", async (ctx) => {
   if (ctx.from.id.toString() !== process.env.CLL) {
@@ -360,10 +403,10 @@ bot.action("/new_app", async (ctx) => {
       const isExistingApp = await getApp("discord", ctx.wizard.state.token);
       console.log(isExistingApp);
 
-      if (isExistingApp){
+      if (isExistingApp) {
         ctx.reply("📛 App with token already exists.");
         return;
-      };
+      }
 
       console.log(ctx.wizard.state);
       await createApp("discord", ctx.wizard.state);
@@ -428,10 +471,10 @@ bot.action("/new_app", async (ctx) => {
       console.log(isExistingApp);
       console.log(ctx.wizard.state);
 
-      if (isExistingApp){
+      if (isExistingApp) {
         ctx.reply("📛 App with phone numbeer already exists.");
         return;
-      };
+      }
 
       await createApp("telegram", ctx.wizard.state);
       await ctx.reply("✅ Telegram config saved.");

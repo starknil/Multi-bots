@@ -166,7 +166,7 @@ class DiscordBot {
         );
       }
     } catch (err) {
-      console.error("[Discord] Error:", err);
+      console.error(`[Discord] [${this.id}] 📛 Error:`, err.message);
       const t =
         this.type === "manual"
           ? `❌ Failed to start Discord bot. Error: ${err.message}`
