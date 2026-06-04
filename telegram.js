@@ -159,11 +159,9 @@ class TelegramBot {
           const chat = await message.getChat();
           let sender = await message.getSender();
 
-          if (!sender) return;
+          if (!sender || sender.bot) return;
 
-          if (sender.bot) return;
-
-          sender = await this.client.getEntity(sender);
+          //sender = await this.client.getEntity(sender);
 
 
           if (
